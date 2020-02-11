@@ -1,0 +1,54 @@
+Aeroacoustics log
+
+
+20190726 Notes
+
+From Simley Thesis:
+
+The most basic beamforming algorithm is called delay-and-sum beamforming [4] and the beamforming algorithms used in this research are derived from this method. 
+
+The collection of results from beamforming over the scanned grid points is referred to as the 􏰀noise map􏰁.
+
+Displayed on the noise map is the power detected at each grid point in terms of decibels below the peak power, which in this case is the power detected at the source location. An ideal beamformer would return power only when the array is steered directly at a source. Due to the impossibility of a creating a perfect beamformer, the noise map contains some residual power detected at other locations due to coincidental phase matching between sensors in the array. The relatively high regions of residual power are called sidelobes.
+
+Array located H away from turbine (H=hub height)
+
+
+
+Delay-and-sum beamformers [4] introduce a delay to each sensor waveform output equal to the amount of time it takes a signal propagating from the assumed position $\vec{x}^0$ to travel between that sensor (sensor $m$) and a reference sensor (sensor 0). The delayed sensor output waveforms are then multiplied by a weight factor, $w_m$, and summed to produce the beamformer output waveform $z(t)$.
+
+\[
+z(t) = \sum_{m=0}^{M-1} w_m y_m (t - \Delta_m) 
+\]
+
+$w_m$: weight factor
+$z(t)$: output waveform
+$y_m(t)$: signal from microphone channel m
+$\Delta_m$: time delay
+
+\[
+\Delta_m = \frac{r_0 - r_m}{c}
+\]
+
+$r_m$: distance between the assumed source position and sensor $m$
+$c$: speed of sound propagation
+
+If the source is in the Fairfield,
+
+\[
+\Delta_m = \frac{\vec{x}^0 \vec{x}_m}{|\vec{x}^0| c}
+\]
+
+Weighting factor is chosen to normalize the amplitude of a microphone channel to a reference level:
+
+\[
+w_m = \frac{r_m}{r_0}
+\]
+
+
+
+
+REFS:
+[4] Johnson, D. H. and Dudgeon, D. G., Array Signal Processing: Concepts and Techniques. Prentice Hall, Englewood Cli􏰃s, NJ, 1993.
+
+[47] Dougherty, R. P., 􏰀Beamforming in Acoustic Testing,􏰁 in Aeroacoustic Measurements, Mueller, T. J., Ed., Springer, Berlin, 2002.
