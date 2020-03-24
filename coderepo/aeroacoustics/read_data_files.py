@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import sys
+from nptdms import TdmsFile
    
 def read_NoiseLabSlice_file(filename):
     """Read a noiselab "train" file containing Leq and 1/3 octave bands in 10 second slices.
@@ -51,3 +52,52 @@ def read_NoiseLabSlice_file(filename):
     df_nl.drop(columns=['Duration [s]','Filter Settled','Settle [s]','date','Start Time'],inplace=True)
 
     return df_nl
+
+def read_tdmsSCADA_file(filename):
+    """Read a tdms file containing DOE1.5 turbine SCADA and met tower data.
+    The returned dataframe contains the variables of interest as a function of GPS time.
+
+    inputs:
+    filename: Input file to read
+
+    outputs:
+    df_sc: Dataframe of the file 
+    """
+
+    currFile = TdmsFile(filename)
+    df_sc = currFile.as_dataframe()
+
+    #rename columns
+    col_names = list(df_sc.columns)
+    for i in range(len(col_names)):
+        col_names[i] = col_names[i].replace('/\'SlowData\'/\'','')[:-1]
+    df_sc.columns = col_names
+
+    # set timestamp
+    # TODO: For now, rounding timestamp to nearest second. Should we change to interpolating to integer seconds?
+    df_sc['time'] = pd.to_datetime(currFile.object('SlowData','MS Excel Timestamp').time_track(absolute_time=True))
+    df_sc['time'] = df_sc.time.dt.round(freq='s')
+
+    # yaw offset target
+    df_sc['Yaw_Offset_Cmd'] = df_sc.WD_Nacelle_Mod - df_sc.WD_Nacelle
+
+    # columns to keep
+    # TODO:
+    # 1) Yaw_Encoder seems to be calibrated to true North (it agrees with WD1_87m)
+    # 2) Not sure what combination of the EGD_OpCtl variables will be helpful for turbine status info
+    # 3) Is EGD_In_WindSpd a corrected version of NacelleWindSpeed?
+    # 4) What is the difference between met instruments 1 and 2?
+    # 5) The "EGD" prefixes seem to be new as of mid Feb. 2020. Before they were "OPC." Check the 
+    #    variables again when the aeroacoustics experiments starts
+    cols_keep = ['time', 'Hum1', 'Temp1', 'Hum2', 'Temp2',
+       'Windspeed_87m', 'WD1_87m', 'Air_Press_2', 'Air_Press_1',
+       'WindSpeed_80m', 'Active Power', 'LSS RPM', 'NacelleWindSpeed',
+       'Yaw_Encoder', 'Pitch_Blade1', 'WD_Mod_Active', 'WD_Nacelle', 
+       'WD_Nacelle_Mod', 'Yaw_Offset_Cmd', 'EGD_AI_In_GridMonRealPowerAct',
+       'EGD_In_RotorSpd', 'EGD_In_WindSpd', 'EGD_OpCtl_TurbineFullState',
+       'EGD_OpCtl_TurbineOperationState', 'EGD_OpCtl_TurbineStatus',
+       'EGD_Out_CalcTrbineStateSCADA', 'EGD_Out_TurbineStatusSCADA']
+
+    df_sc = df_sc[cols_keep]
+
+    return df_sc
