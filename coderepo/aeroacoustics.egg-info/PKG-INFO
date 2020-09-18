@@ -1,0 +1,18 @@
+Metadata-Version: 2.1
+Name: aeroacoustics
+Version: 0.1
+Summary: Tools for the analysis of aeroacoustic noise data
+Home-page: https://github.com/nhamilto/Aeroacoustics
+Author: NREL National Wind Technology Center
+Author-email: nicholas.hamilton@nrel.gov
+License: Apache-2.0
+Description: Tools for the analysis of aeroacoustic noise data
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Requires-Python: >=3.6.0
+Description-Content-Type: text/markdown
