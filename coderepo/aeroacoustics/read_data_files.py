@@ -20,36 +20,89 @@ def read_NoiseLabSlice_file(filename):
     """
 
     df_nl = pd.read_csv(filename,sep='\t')
-    
+
     # remove whitespace
     df_nl.rename(columns=lambda x: x.strip(),inplace=True)
 
-    # columns to keep
-    cols_keep = ['Clip Name', 'Start Time', 'Duration [s]', 'Leq',
-        'Filter Settled', '20.0', '25.0', '31.5', '40.0', '50.0', '63.0', '80.0',
-        '100.0', '125.0', '160.0', '200.0', '250.0', '315.0', '400.0', '500.0',
-        '630.0', '800.0', '1000.0', '1250.0', '1600.0', '2000.0', '2500.0',
-        '3150.0', '4000.0', '5000.0', '6300.0', '8000.0', '10000.0', '12500.0',
-        '16000.0', '20000.0', 'Settle [s]']
-
-    df_nl = df_nl[cols_keep]
-
     # convert to numeric
-    cols_num = [c for c in cols_keep if c not in ('Clip Name','Filter Settled')]
+    cols_num = [c for c in df_nl.columns.values if c not in ('Clip Name','Filter Settled')]
     for col in cols_num:
         df_nl[col] = pd.to_numeric(df_nl[col],errors='coerce')
+
+    # create new column for third octave bands
+    df_nl['third_octave_spectrum'] = df_nl[df_nl.columns.values[33:-4]].values.tolist()
+    df_nl['third_octave_spectrum'] = df_nl['third_octave_spectrum'].apply(lambda x: np.array(x))
+
+    # columns to keep
+    # cols_keep = ['Clip Name', 'Start Time', 'Duration [s]', 'Leq',
+    #     'Filter Settled', '20.0', '25.0', '31.5', '40.0', '50.0', '63.0', '80.0',
+    #     '100.0', '125.0', '160.0', '200.0', '250.0', '315.0', '400.0', '500.0',
+    #     '630.0', '800.0', '1000.0', '1250.0', '1600.0', '2000.0', '2500.0',
+    #     '3150.0', '4000.0', '5000.0', '6300.0', '8000.0', '10000.0', '12500.0',
+    #     '16000.0', '20000.0', 'Settle [s]']
+    cols_keep = ['Clip Name', 'Start Time', 'Duration [s]', 'Leq',
+        'Filter Settled', 'Settle [s]', 'third_octave_spectrum']
+
+    df_nl = df_nl[cols_keep]
 
     # drop unwanted rows
     df_nl = df_nl[df_nl['Duration [s]'] == 10.0]
     df_nl = df_nl[df_nl['Settle [s]'] == 0.0] # remove first slice where filter settling. Might not be necessary.
 
     # Get date, time, and mic # from Clip Name
-    df_nl[['date','time','mic']] = df_nl['Clip Name'].str.split('_',expand=True)[[1,2,3]]
+    df_nl[['date','time','mic']] = df_nl['Clip Name'].str.split('_',expand=True)[[1,2,6]]
     df_nl['time'] = pd.to_datetime(df_nl['date']+' '+df_nl['time'])
 
     # add clip start time to time column
     df_nl['time'] = df_nl['time'] + pd.to_timedelta(df_nl['Start Time'], unit='s')
     df_nl.drop(columns=['Duration [s]','Filter Settled','Settle [s]','date','Start Time'],inplace=True)
+
+    return df_nl
+
+def read_NoiseLabFFTSlice_file(filename):
+    """Read a noiselab "train" file containing FFT spectra in 10 second slices.
+    The file can contain slices for mutiple recordings. The returned dataframe will parse 
+    the recording names into microphone # and date/time.
+
+    inputs:
+    filename: Input file to read
+
+    outputs:
+    df_nl: Dataframe of the file 
+    """
+
+    df_nl = pd.read_csv(filename,sep='\t')
+
+    # remove whitespace
+    df_nl.rename(columns=lambda x: x.strip(),inplace=True)
+
+    # create new column for spectrum
+    df_nl['spectrum'] = df_nl[df_nl.columns.values[5:]].values.tolist()
+    df_nl['spectrum'] = df_nl['spectrum'].apply(lambda x: np.array(x))
+
+    # convert to numeric
+    cols_num = ['Slice  Number']
+    for col in cols_num:
+        df_nl[col] = pd.to_numeric(df_nl[col],errors='coerce')
+
+    # create a start time column
+    df_nl['Start Time'] = 10*(df_nl['Slice  Number']-1)
+
+    # columns to keep
+    cols_keep = ['Clip Name', 'Start Time', 'df', 'f0', 'spectrum']
+
+    df_nl = df_nl[cols_keep]
+
+    # drop unwanted rows
+    df_nl = df_nl.dropna()
+
+    # Get date, time, and mic # from Clip Name
+    df_nl[['date','time','mic']] = df_nl['Clip Name'].str.split('_',expand=True)[[1,2,6]]
+    df_nl['time'] = pd.to_datetime(df_nl['date']+' '+df_nl['time'])
+
+    # add clip start time to time column
+    df_nl['time'] = df_nl['time'] + pd.to_timedelta(df_nl['Start Time'], unit='s')
+    df_nl.drop(columns=['date','Start Time'],inplace=True)
 
     return df_nl
 
@@ -98,6 +151,6 @@ def read_tdmsSCADA_file(filename):
        'EGD_OpCtl_TurbineOperationState', 'EGD_OpCtl_TurbineStatus',
        'EGD_Out_CalcTrbineStateSCADA', 'EGD_Out_TurbineStatusSCADA']
 
-    df_sc = df_sc[cols_keep]
+    #df_sc = df_sc[cols_keep]
 
     return df_sc

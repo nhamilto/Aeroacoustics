@@ -38,7 +38,7 @@ def identify_NoiseLabSlice_to_add(list_filename='noiseLAB_files.p',root_dir='/Vo
 
 def process_NoiseLabSlice_file(filename, root_dir_noiselab='/Volumes/Aeroacoustics/_ProcessedData/SliceData',
                                 root_dir_tdms='/Volumes/Tests/_raw data/Slow',
-                                dataset_file='aeroacoustics_dataset.p'):
+                                dataset_file='aeroacoustics_dataset.p',third_octave=True):
     """Read a noiseLAB slice file, combine it with turbine and met data and 
     append to the master dataset
 
@@ -49,7 +49,10 @@ def process_NoiseLabSlice_file(filename, root_dir_noiselab='/Volumes/Aeroacousti
     dataset_file: name of file containing master dataset
     """
 
-    df_nl = rd.read_NoiseLabSlice_file(os.path.join(root_dir_noiselab,filename))
+    if third_octave:
+        df_nl = rd.read_NoiseLabSlice_file(os.path.join(root_dir_noiselab,filename))
+    else:
+        df_nl = rd.read_NoiseLabFFTSlice_file(os.path.join(root_dir_noiselab,filename))
 
     # DEBUGGING, REMOVE!!!
     # df_nl.time = df_nl.time+pd.DateOffset(days=2)
@@ -102,7 +105,7 @@ def process_NoiseLabSlice_file(filename, root_dir_noiselab='/Volumes/Aeroacousti
 
     # resample to 10 seconds w/ circular averaging for wind directions
     # columns to circularly average
-    cols_circ = ['WD1_87m', 'Yaw_Encoder', 'Yaw_Offset_Cmd']
+    cols_circ = ['WD1_87m', 'Wind_Direction_38m', 'Yaw_Encoder', 'EGD_Yaw_PositionToNorth', 'Yaw_Offset_Cmd']
 
     for col in cols_circ:
         df_sc[col+'_cos'] = np.cos(np.radians(df_sc[col]))
