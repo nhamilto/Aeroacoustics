@@ -38,7 +38,8 @@ def identify_NoiseLabSlice_to_add(list_filename='noiseLAB_files.p',root_dir='/Vo
 
 def process_NoiseLabSlice_file(filename, root_dir_noiselab='/Volumes/Aeroacoustics/_ProcessedData/SliceData',
                                 root_dir_tdms='/Volumes/Tests/_raw data/Slow',
-                                dataset_file='aeroacoustics_dataset.p',third_octave=True):
+                                dataset_file='aeroacoustics_dataset.p',third_octave=True,
+                                unweighted=False):
     """Read a noiseLAB slice file, combine it with turbine and met data and 
     append to the master dataset
 
@@ -50,7 +51,10 @@ def process_NoiseLabSlice_file(filename, root_dir_noiselab='/Volumes/Aeroacousti
     """
 
     if third_octave:
-        df_nl = rd.read_NoiseLabSlice_file(os.path.join(root_dir_noiselab,filename))
+        if unweighted:
+            df_nl = rd.read_NoiseLabSlice_file(os.path.join(root_dir_noiselab,filename),unweighted=unweighted)
+        else:
+            df_nl = rd.read_NoiseLabSlice_file(os.path.join(root_dir_noiselab,filename))
     else:
         df_nl = rd.read_NoiseLabFFTSlice_file(os.path.join(root_dir_noiselab,filename))
 

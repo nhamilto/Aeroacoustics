@@ -7,7 +7,7 @@ import pickle
 import sys
 from nptdms import TdmsFile
    
-def read_NoiseLabSlice_file(filename):
+def read_NoiseLabSlice_file(filename, unweighted=False):
     """Read a noiselab "train" file containing Leq and 1/3 octave bands in 10 second slices.
     The file can contain slices for mutiple recordings. The returned dataframe will parse 
     the recording names into microphone # and date/time.
@@ -40,8 +40,13 @@ def read_NoiseLabSlice_file(filename):
     #     '630.0', '800.0', '1000.0', '1250.0', '1600.0', '2000.0', '2500.0',
     #     '3150.0', '4000.0', '5000.0', '6300.0', '8000.0', '10000.0', '12500.0',
     #     '16000.0', '20000.0', 'Settle [s]']
-    cols_keep = ['Clip Name', 'Start Time', 'Duration [s]', 'Leq',
-        'Filter Settled', 'Settle [s]', 'third_octave_spectrum']
+    if unweighted:
+        cols_keep = ['Clip Name', 'Start Time', 'Duration [s]', 'Leq',
+            'G (infra)','A (LF)','Lin','Filter Settled', 'Settle [s]',
+            'third_octave_spectrum']
+    else:
+        cols_keep = ['Clip Name', 'Start Time', 'Duration [s]', 'Leq',
+            'Filter Settled', 'Settle [s]', 'third_octave_spectrum']
 
     df_nl = df_nl[cols_keep]
 
@@ -132,7 +137,13 @@ def read_tdmsSCADA_file(filename):
     df_sc['time'] = df_sc.time.dt.round(freq='s')
 
     # yaw offset target
-    df_sc['Yaw_Offset_Cmd'] = df_sc.WD_Nacelle_Mod - df_sc.WD_Nacelle
+    df_sc['Yaw_Offset_Cmd'] = df_sc.WD_Nacelle - df_sc.WD_Nacelle_Mod
+
+    df_sc['Yaw_Offset_Cmd_Bin'] = 0.
+    df_sc.loc[df_sc['Yaw_Offset_Cmd'] < -9.,'Yaw_Offset_Cmd_Bin'] = -18.
+    df_sc.loc[(df_sc['Yaw_Offset_Cmd'] >= 5.) & (df_sc['Yaw_Offset_Cmd'] < 14.),'Yaw_Offset_Cmd_Bin'] = 10.
+    df_sc.loc[(df_sc['Yaw_Offset_Cmd'] >= 14.) & (df_sc['Yaw_Offset_Cmd'] < 21.5),'Yaw_Offset_Cmd_Bin'] = 18.
+    df_sc.loc[df_sc['Yaw_Offset_Cmd'] >= 21.5,'Yaw_Offset_Cmd_Bin'] = 25.
 
     # columns to keep
     # TODO:
