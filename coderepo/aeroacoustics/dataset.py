@@ -95,11 +95,12 @@ def process_NoiseLabSlice_file(filename, root_dir_noiselab='/Volumes/Aeroacousti
         if df_sc.time.max()+pd.DateOffset(seconds=10) <= df_new.index.max():
             tdms_dir = os.path.join(root_dir_tdms,(df_new.index[0]+pd.DateOffset(days=i)).strftime('%Y-%m-%d'))
 
-            files = os.listdir(tdms_dir)
-            files = [f for f in files if 'tdms_index' not in f]
+            if os.path.isdir(tdms_dir):
+                files = os.listdir(tdms_dir)
+                files = [f for f in files if 'tdms_index' not in f]
 
-            for f in files:
-                df_sc = df_sc.append(rd.read_tdmsSCADA_file(os.path.join(tdms_dir,f)))
+                for f in files:
+                    df_sc = df_sc.append(rd.read_tdmsSCADA_file(os.path.join(tdms_dir,f)))
 
     df_sc.drop_duplicates('time',inplace=True)
     df_sc.set_index('time',inplace=True)

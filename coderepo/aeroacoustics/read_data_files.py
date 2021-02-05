@@ -134,7 +134,8 @@ def read_tdmsSCADA_file(filename):
     # set timestamp
     # TODO: For now, rounding timestamp to nearest second. Should we change to interpolating to integer seconds?
     df_sc['time'] = pd.to_datetime(currFile.object('SlowData','MS Excel Timestamp').time_track(absolute_time=True))
-    df_sc['time'] = df_sc.time.dt.round(freq='s')
+    # Convert to MST
+    df_sc['time'] = df_sc.time.dt.tz_localize(tz='UTC').dt.tz_convert('US/Mountain').dt.tz_localize(None)
 
     # yaw offset target
     df_sc['Yaw_Offset_Cmd'] = df_sc.WD_Nacelle - df_sc.WD_Nacelle_Mod
