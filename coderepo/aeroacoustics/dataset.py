@@ -68,6 +68,7 @@ def process_NoiseLabSlice_file(filename, root_dir_noiselab='/Volumes/Aeroacousti
     df_new = df_nl.set_index(['time','mic'])
     df_new = df_new.unstack()
     df_new.columns = ['_'.join(col[::-1]) for col in df_new.columns.values]
+    df_new.sort_index(inplace=True)
 
     # load tdms SCADA files covering the noiseLAB data time period
     # TODO: It seems the previous day's folder is more likely to contain the next day's data.
